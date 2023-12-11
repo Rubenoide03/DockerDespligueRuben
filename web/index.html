@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Lista</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+
+<form action="http://localhost:4000/api/init" method="post" class="mt-5 mx-5">
+    <div class="mb-3">
+        <label for="first_name" class="form-label">Nueva tarea</label>
+        <input name="nueva" type="text" class="form-control" id="first_name" placeholder="Nueva tarea" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Agregar</button>
+</form>
+
+<div class="container mt-5">
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col">Tarea</th>
+            <th scope="col">Terminada</th>
+            <th scope="col">Acción</th>
+        </tr>
+        </thead>
+        <tbody id="resultados">
+        </tbody>
+    </table>
+</div>
+
+<script >
+
+    let url = 'http://localhost:4000/api/init';
+
+    const handleOnDelete = (id) => {
+
+        fetch(`${url}/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(() => window.location.reload())
+            .catch(error => console.error('Error:', error));
+
+    }
+
+    const handleDone = (checkbox) => {
+
+        const listaId = checkbox.getAttribute('data-lista-id');
+        const done = checkbox.checked;
+
+        fetch(`${url}/${listaId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({isDone: Boolean(done)})
+        }).catch(error => console.error('Error:', error));
+
+    }
+
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('resultados');
+            data.forEach(lista => {
+
+                tbody.innerHTML += `<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600" id='${lista._id}'>
+            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                ${lista.nombre}
+            </th>
+            <td class="px-6 py-4">
+                <div class="flex items-center">
+                    <input id="checkbox-all-search" type="checkbox" ${Boolean(lista.isDone === false) ? 'selected' : 'checked'} data-lista-id="${lista._id}" onchange="handleDone(this)" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                    <label for="checkbox-all-search" class="sr-only">checkbox</label>
+                </div>            </td>
+            <td class="px-6 py-4">
+                <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline" onclick="handleOnDelete('${lista._id}')">Eliminar</a>
+            </td>
+        </tr>`;
+            });
+        })
+        .catch(error => console.error('Error:', error));
+</script>
+
+
+</body>
+</html>
